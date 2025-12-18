@@ -1,4 +1,4 @@
-# subs – Subdomain Enumeration Tool v1.0
+# Subs – Subdomain Enumeration Tool v1.0
 
 subs is a simple command-line tool written in Python. It finds subdomains using a wordlist, checks DNS, then checks the website status. The tool only shows useful results.
 
