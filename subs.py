@@ -1,8 +1,12 @@
+#!/usr/bin/env python3
+
 import argparse
 import socket
 import requests
 import pyfiglet
 import os
+import time
+import random
 from colorama import Fore, Style
 from requests.exceptions import RequestException
 
@@ -10,6 +14,9 @@ from requests.exceptions import RequestException
 # Config
 # ======================
 WORDLIST_FILE = "wordlist.txt"
+ALLOWED_STATUS = {200, 403, 404}
+DELAY_MIN = 0.05
+DELAY_MAX = 0.15
 
 # ======================
 # Banner
@@ -43,12 +50,13 @@ def check_http(subdomain, timeout):
 
     for url in urls:
         try:
-            response = requests.get(
+            r = requests.get(
                 url,
                 timeout=timeout,
-                allow_redirects=True
+                allow_redirects=True,
+                headers={"User-Agent": "subs/1.0"}
             )
-            return response.status_code
+            return r.status_code
         except RequestException:
             continue
 
@@ -62,24 +70,24 @@ def scan(domain, timeout):
         print(Fore.RED + f"[!] Wordlist file not found: {WORDLIST_FILE}" + Style.RESET_ALL)
         return
 
-    with open(WORDLIST_FILE, "r") as f:
+    with open(WORDLIST_FILE, "r", encoding="utf-8", errors="ignore") as f:
         words = f.read().splitlines()
 
     for word in words:
-        if not word.strip():
+        word = word.strip()
+        if not word:
             continue
 
-        subdomain = f"{word.strip()}.{domain}"
+        subdomain = f"{word}.{domain}"
 
         if dns_resolve(subdomain):
             status = check_http(subdomain, timeout)
 
-            if status:
-                print(Fore.GREEN + f"[+] {subdomain} -> {status}" + Style.RESET_ALL)
-            else:
-                print(Fore.YELLOW + f"[+] {subdomain} -> Alive (No HTTP)" + Style.RESET_ALL)
-        else:
-            print(Fore.RED + f"[-] {subdomain} -> Dead" + Style.RESET_ALL)
+            if status in ALLOWED_STATUS:
+                color = Fore.GREEN if status == 200 else Fore.YELLOW
+                print(color + f"[+] {subdomain} -> {status}" + Style.RESET_ALL)
+
+        time.sleep(random.uniform(DELAY_MIN, DELAY_MAX))
 
 # ======================
 # Main
@@ -94,7 +102,6 @@ def main():
 
     parser.add_argument(
         "-d", "--domain",
-        required=True,
         help="Target domain (example.com)"
     )
 
@@ -105,7 +112,12 @@ def main():
         help="HTTP timeout in seconds"
     )
 
-    args = parser.parse_args()
+    args, _ = parser.parse_known_args()
+
+    if not args.domain:
+        parser.print_help()
+        return
+
     scan(args.domain, args.timeout)
 
 if __name__ == "__main__":
