@@ -55,25 +55,17 @@ The tool reads subdomains from `wordlist.txt`.
 ### Start scan
 
 ```
-subs -d example.com
+python subs -d example.com
 ```
 
 ### Change timeout (optional)
 
 ```
-subs -d example.com -t 5
+python subs -d example.com -t 5
 ```
 
 * Default timeout: 3 seconds
 * Max timeout: 10 seconds
-
-### Show help only
-
-```
-subs
-```
-
----
 
 ## Output Example
 
@@ -83,19 +75,6 @@ subs
 [+] test.example.com -> 404
 ```
 
----
-
-## Project Files
-
-```
-subs/
-├── subs.py
-├── wordlist.txt
-├── requirements.txt
-└── README.md
-```
-
----
 
 ## Requirements
 
