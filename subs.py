@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import argparse
 import socket
 import requests
@@ -6,6 +8,7 @@ import os
 import time
 from colorama import Fore, Style
 from requests.exceptions import RequestException
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # ======================
 # Config
@@ -31,6 +34,19 @@ def show_banner():
 def show_usage():
     print(Fore.GREEN + "Usage: python subs.py -d domain.com" + Style.RESET_ALL)
     print()
+
+# ======================
+# Auto Threads Logic
+# ======================
+def get_auto_threads(word_count):
+    if word_count < 5000:
+        return 1
+    elif word_count < 30000:
+        return 3
+    elif word_count < 100000:
+        return 5
+    else:
+        return 8
 
 # ======================
 # DNS Resolve
@@ -66,6 +82,33 @@ def check_http(subdomain, timeout):
     return None
 
 # ======================
+# Worker
+# ======================
+def process_word(word, domain, timeout):
+    word = word.strip()
+    if not word:
+        return
+
+    subdomain = f"{word}.{domain}"
+
+    if dns_resolve(subdomain):
+        status = check_http(subdomain, timeout)
+
+        if status in ALLOWED_STATUS:
+            if status == 200:
+                color = Fore.GREEN
+            elif status == 403:
+                color = Fore.YELLOW
+            elif status == 404:
+                color = Fore.RED
+            else:
+                color = Fore.WHITE
+
+            print(color + f"[+] {subdomain} -> {status}" + Style.RESET_ALL)
+
+    time.sleep(DELAY)
+
+# ======================
 # Scan Logic
 # ======================
 def scan(domain, timeout):
@@ -73,34 +116,21 @@ def scan(domain, timeout):
         print(Fore.RED + f"[!] Wordlist file not found: {WORDLIST_FILE}" + Style.RESET_ALL)
         return
 
-    print(Fore.CYAN + "[*] Start scanning..." + Style.RESET_ALL)
-
     with open(WORDLIST_FILE, "r", encoding="utf-8", errors="ignore") as f:
         words = f.read().splitlines()
 
-    for word in words:
-        word = word.strip()
-        if not word:
-            continue
+    thread_count = get_auto_threads(len(words))
 
-        subdomain = f"{word}.{domain}"
+    print(Fore.CYAN + "[*] Start scanning..." + Style.RESET_ALL)
 
-        if dns_resolve(subdomain):
-            status = check_http(subdomain, timeout)
+    with ThreadPoolExecutor(max_workers=thread_count) as executor:
+        futures = [
+            executor.submit(process_word, word, domain, timeout)
+            for word in words
+        ]
 
-            if status in ALLOWED_STATUS:
-                if status == 200:
-                    color = Fore.GREEN
-                elif status == 403:
-                    color = Fore.YELLOW
-                elif status == 404:
-                    color = Fore.RED
-                else:
-                    color = Fore.WHITE
-
-                print(color + f"[+] {subdomain} -> {status}" + Style.RESET_ALL)
-
-        time.sleep(DELAY)
+        for _ in as_completed(futures):
+            pass
 
 # ======================
 # Main
@@ -151,4 +181,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
