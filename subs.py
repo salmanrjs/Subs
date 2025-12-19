@@ -12,7 +12,7 @@ from requests.exceptions import RequestException
 # ======================
 WORDLIST_FILE = "wordlist.txt"
 ALLOWED_STATUS = {200, 403, 404}
-DELAY = 0.01
+DELAY = 0.03
 DEFAULT_TIMEOUT = 3
 MAX_TIMEOUT = 10
 
@@ -151,3 +151,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
