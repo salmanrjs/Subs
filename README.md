@@ -1,4 +1,4 @@
-# Subs – Subdomain Enumeration Tool v1.0
+# Subs – Subdomain Enumeration Tool v2.0
 
 subs is a simple command-line tool written in Python. It finds subdomains using a wordlist, checks DNS, then checks the website status. The tool only shows useful results.
 
@@ -10,6 +10,9 @@ subs is a simple command-line tool written in Python. It finds subdomains using 
 * Check DNS first, then HTTP
 * Show only important results: **200, 403, 404**
 * Built-in delay to avoid fast scanning
+* Custom wordlist support (-w)
+* Adjustable thread count (-T)
+* Save results to file (-o)
 
 ---
 
@@ -50,7 +53,8 @@ pip install -r requirements.txt
 
 ## Usage
 
-The tool reads subdomains from `wordlist.txt`.
+The tool reads subdomains from `wordlist.txt` by default.
+You can provide a custom wordlist using the -w option.
 
 ### Start scan
 
@@ -64,6 +68,18 @@ python subs -d example.com
 python subs -d example.com -t 5
 ```
 
+### Use custom wordlist (optional)
+
+python subs -d example.com -w mylist.txt
+
+### Set threads manually (optional)
+
+python subs -d example.com -T 10
+
+### Save results to file (optional)
+
+python subs -d example.com -o results.txt
+
 * Default timeout: 3 seconds
 * Max timeout: 10 seconds
 
@@ -75,6 +91,13 @@ python subs -d example.com -t 5
 [+] test.example.com -> 404
 ```
 
+## Command Summary
+
+-d, --domain     Target domain  
+-w, --wordlist   Custom wordlist file  
+-T, --threads    Number of threads  
+-t, --timeout    HTTP timeout  
+-o, --output     Save results to file  
 
 ## Requirements
 
